@@ -677,6 +677,32 @@ class MultiGeometryFiber(object):
         result._set_sum_variance(variance)
         result._set_count(count)
         return result
+    
+    def set_wavelength(self, value):
+        """
+        Changes the wavelength of a group of azimuthal fiber integrators
+        """
+        self.wavelength = float(value)
+        for fi in self.fis:
+            fi.set_wavelength(self.wavelength)
+
+    def reset(self, collect_garbage=True):
+        """Clean up all caches for all fiber integrators, resets the thread-pool as well.
+
+        :param collect_garbage: set to False to prevent garbage collection, faster
+        """
+        for fi in self.fis:
+            fi.reset(collect_garbage=False)
+        if self.threadpool:
+            try:
+                threadpoolsize = self.threadpool._processes
+            except Exception as err:
+                print(f"{type(err)}: {err}")
+                threadpoolsize = 1
+            self.threadpool.terminate()
+            self.threadpool = ThreadPool(threadpoolsize)
+        if collect_garbage:
+            gc.collect()
 
     integrate2d_grazing_incidence = integrate2d_fiber
     integrate2d = integrate2d_fiber
